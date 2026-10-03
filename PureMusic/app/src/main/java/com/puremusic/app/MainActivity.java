@@ -2,7 +2,10 @@ package com.puremusic.app;
 
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.app.SearchManager;
 import android.content.ComponentName;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -12,7 +15,6 @@ import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -32,7 +34,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -495,32 +496,45 @@ public class MainActivity extends Activity {
 
     private void openNetEase() {
         Intent launch = getPackageManager().getLaunchIntentForPackage(NETEASE_PACKAGE);
-        if (launch != null) {
-            try {
-                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(launch);
-                return;
-            } catch (Exception ignored) {}
+        if (launch == null) {
+            Toast.makeText(this, "没有检测到网易云音乐", Toast.LENGTH_SHORT).show();
+            return;
         }
-        openUrl("https://music.163.com/");
+        try {
+            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(launch);
+        } catch (Exception e) {
+            Toast.makeText(this, "无法启动网易云音乐", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void searchNetEase(String query) {
         if (TextUtils.isEmpty(query)) return;
-        try {
-            String encoded = URLEncoder.encode(query, "UTF-8");
-            openUrl("https://music.163.com/#/search/m/?s=" + encoded);
-        } catch (Exception e) {
-            openNetEase();
-        }
-    }
 
-    private void openUrl(String url) {
+        // First try Android's explicit in-app search intent. Because the package is fixed
+        // to NetEase Cloud Music, the system will never route this to a browser.
         try {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-        } catch (Exception e) {
-            Toast.makeText(this, "没有可打开此链接的应用", Toast.LENGTH_SHORT).show();
+            Intent search = new Intent(Intent.ACTION_SEARCH);
+            search.setPackage(NETEASE_PACKAGE);
+            search.putExtra(SearchManager.QUERY, query);
+            search.putExtra("query", query);
+            search.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(search);
+            return;
+        } catch (Exception ignored) {
+            // Some NetEase versions do not expose ACTION_SEARCH. In that case we still
+            // keep the flow browser-free: copy the exact query and open NetEase itself.
         }
+
+        try {
+            ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            if (cm != null) {
+                cm.setPrimaryClip(ClipData.newPlainText("纯音搜索词", query));
+            }
+        } catch (Exception ignored) {}
+
+        openNetEase();
+        Toast.makeText(this, "搜索词已复制，可直接粘贴到网易云搜索框", Toast.LENGTH_LONG).show();
     }
 
     private void toggleAiPanel() {
