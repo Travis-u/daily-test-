@@ -1,71 +1,78 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>纯音</title>
+<meta name="color-scheme" content="light dark" />
+<title>Evan</title>
 <style>
-:root{--bg:#f7f7f3;--card:#ffffff;--text:#151515;--muted:#85857d;--line:#e7e7e0;--soft:#efefe9;--accent:#151515;--radius:24px}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif;min-height:100vh}
-button,input{font:inherit}.app{max-width:620px;margin:auto;min-height:100vh;padding:18px 18px calc(102px + env(safe-area-inset-bottom))}
-.top{display:flex;align-items:center;justify-content:space-between;padding:8px 2px 18px}.brand{font-size:22px;font-weight:720;letter-spacing:.08em}.status{font-size:12px;color:var(--muted);background:var(--soft);padding:6px 10px;border-radius:999px}
-.page{display:none}.page.active{display:block}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 30px rgba(20,20,20,.035)}
-.cover{aspect-ratio:1/1;border-radius:32px;background:linear-gradient(145deg,#efefea,#d9d9d1);display:grid;place-items:center;margin:10px 0 22px;overflow:hidden;position:relative}.cover:before{content:"♫";font-size:min(22vw,120px);font-weight:700;opacity:.88}.cover.playing:after{content:"";position:absolute;inset:18%;border:1px solid rgba(0,0,0,.07);border-radius:50%}
-.meta{text-align:center}.title{font-size:24px;font-weight:720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.artist{color:var(--muted);margin-top:7px}.progress{margin:26px 4px 8px}input[type=range]{width:100%;accent-color:#171717}.times{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
-.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:center;margin:24px auto 20px;max-width:310px}.ctrl{border:0;background:transparent;font-size:30px;height:58px}.play{width:64px;height:64px;border-radius:50%;background:#151515;color:#fff;font-size:25px;justify-self:center}.smallActions{display:flex;gap:10px;margin-top:18px}.pillBtn{flex:1;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:13px 14px;color:var(--text)}
-.searchBox{display:flex;gap:9px;margin-top:18px}.searchBox input{flex:1;border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px 15px;outline:none}.searchBox button{border:0;background:#151515;color:white;border-radius:16px;padding:0 18px;font-weight:650}
-.sectionTitle{font-size:13px;color:var(--muted);margin:24px 4px 10px}.chips{display:flex;gap:8px;overflow:auto;padding-bottom:4px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px}.chat{height:calc(100vh - 280px);min-height:350px;overflow:auto;padding:8px 2px 18px;scrollbar-width:none}.msg{max-width:88%;padding:12px 14px;margin:10px 0;border-radius:18px;line-height:1.55;font-size:15px}.me{margin-left:auto;background:#151515;color:white;border-bottom-right-radius:6px}.ai{background:white;border:1px solid var(--line);border-bottom-left-radius:6px}.hint{font-size:12px;color:var(--muted);margin:6px 2px 0}.recs{display:grid;gap:8px;margin-top:10px}.rec{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#f5f5f0;border-radius:14px;padding:10px 11px}.rec b{font-size:14px}.rec span{font-size:12px;color:var(--muted);display:block;margin-top:2px}.rec button{border:0;background:#151515;color:white;border-radius:999px;padding:7px 10px;font-size:12px;white-space:nowrap}.composer{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(79px + env(safe-area-inset-bottom));width:min(calc(100% - 36px),584px);display:flex;gap:8px;background:rgba(247,247,243,.92);backdrop-filter:blur(18px);padding-top:8px}.composer input{flex:1;border:1px solid var(--line);background:white;border-radius:18px;padding:13px 14px;outline:none}.send{width:48px;border:0;background:#151515;color:#fff;border-radius:18px;font-size:20px}
-.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));width:min(calc(100% - 36px),584px);height:62px;border-radius:22px;background:rgba(255,255,255,.91);backdrop-filter:blur(18px);border:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;padding:5px;box-shadow:0 12px 35px rgba(0,0,0,.08)}.nav button{border:0;background:transparent;border-radius:17px;color:var(--muted);font-weight:650}.nav button.active{background:#151515;color:white}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.22);display:none;align-items:flex-end;justify-content:center;z-index:10}.modal.show{display:flex}.sheet{width:min(100%,620px);background:#fff;border-radius:28px 28px 0 0;padding:20px 20px calc(26px + env(safe-area-inset-bottom))}.sheet h3{margin:0 0 10px}.sheet p{color:var(--muted);font-size:14px;line-height:1.55}.sheet input[type=file]{width:100%;border:1px dashed var(--line);border-radius:16px;padding:16px;margin:8px 0}.close{width:100%;border:0;border-radius:16px;background:#151515;color:#fff;padding:13px;margin-top:8px}
+:root{--bg:#f4f2ee;--panel:#fbfaf7;--ink:#191919;--muted:#77736d;--line:#dedad3;--mine:#1f1f1f;--mineInk:#fff;--theirs:#e9e6e0;--danger:#9a3f3f}
+@media(prefers-color-scheme:dark){:root{--bg:#111210;--panel:#171815;--ink:#f2f1ed;--muted:#96938c;--line:#30312d;--mine:#e9e8e4;--mineInk:#171815;--theirs:#252622;--danger:#dc8a8a}}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{overflow:hidden}
+.app{height:100dvh;max-width:760px;margin:0 auto;display:grid;grid-template-rows:auto auto 1fr auto;background:var(--panel)}
+header{display:flex;align-items:center;gap:12px;padding:calc(13px + env(safe-area-inset-top)) 16px 12px;border-bottom:1px solid var(--line)}
+.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#75858a,#26363b);color:white;font-weight:700;flex:0 0 auto}
+.identity{min-width:0;flex:1}.name{font-size:17px;font-weight:680;line-height:1.1}.status{font-size:12px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button{font:inherit}.iconBtn{border:0;background:transparent;color:var(--ink);font-size:22px;padding:7px 9px;border-radius:10px}
+.connect{display:none;margin:10px 12px 0;padding:12px 13px;border:1px solid var(--line);border-radius:14px;background:var(--bg);gap:10px;align-items:center}.connect.show{display:flex}
+.connectText{flex:1;min-width:0}.connectTitle{font-weight:650;font-size:14px}.connectSub{font-size:12px;color:var(--muted);margin-top:2px}.connect button{border:0;background:var(--ink);color:var(--panel);border-radius:10px;padding:9px 11px;font-weight:650;font-size:13px}
+#chat{overflow-y:auto;padding:18px 14px 12px;scroll-behavior:smooth;overscroll-behavior:contain}.day{text-align:center;color:var(--muted);font-size:11px;margin:0 0 16px}
+.row{display:flex;margin:8px 0}.row.me{justify-content:flex-end}.bubble{max-width:min(82%,560px);padding:10px 12px;border-radius:17px;line-height:1.42;font-size:15px;white-space:pre-wrap;word-wrap:break-word}
+.row.them .bubble{background:var(--theirs);border-bottom-left-radius:6px}.row.me .bubble{background:var(--mine);color:var(--mineInk);border-bottom-right-radius:6px}
+.typing::after{content:"";display:inline-block;width:5px;height:13px;margin-left:3px;vertical-align:-2px;background:currentColor;opacity:.55;animation:blink .9s infinite}@keyframes blink{50%{opacity:.05}}
+.error{margin:7px auto;color:var(--danger);font-size:12px;text-align:center;max-width:90%}
+.composer{padding:9px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:8px;align-items:flex-end;background:var(--panel)}
+textarea{resize:none;max-height:120px;min-height:42px;flex:1;border:1px solid var(--line);border-radius:18px;background:var(--bg);color:var(--ink);padding:10px 13px;font:inherit;line-height:1.35;outline:none}
+.send{width:42px;height:42px;border:0;border-radius:50%;background:var(--ink);color:var(--panel);font-size:18px;font-weight:700;display:grid;place-items:center}.send:disabled{opacity:.35}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:flex-end;justify-content:center;z-index:5}.overlay.show{display:flex}
+.sheet{width:min(760px,100%);max-height:88dvh;overflow:auto;background:var(--panel);border-radius:22px 22px 0 0;padding:18px 16px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -8px 34px rgba(0,0,0,.12)}
+.handle{width:38px;height:4px;background:var(--line);border-radius:4px;margin:-6px auto 14px}.sheet h2{font-size:19px;margin:0 0 16px}.field{margin:14px 0}.field label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}.field input,.field textarea{width:100%;border-radius:12px;min-height:42px}.field textarea{height:110px;max-height:none}
+.note{font-size:12px;line-height:1.45;color:var(--muted);margin-top:7px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.actions button{border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px 12px;border-radius:11px}.actions .primary{background:var(--ink);color:var(--panel);border-color:var(--ink)}.actions .danger{color:var(--danger)}
+.tiny{font-size:11px;color:var(--muted);margin-top:14px}.account{padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:13px}.account strong{display:block}.hidden{display:none!important}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="top"><div class="brand">纯音</div><div class="status">无推荐流 · 无社区</div></div>
-  <section id="player" class="page active">
-    <div id="cover" class="cover"></div>
-    <div class="meta"><div id="trackTitle" class="title">尚未播放</div><div id="trackArtist" class="artist">网易云负责曲库，纯音只负责听歌</div></div>
-    <div class="progress"><input id="seek" type="range" min="0" max="100" value="0"><div class="times"><span id="now">0:00</span><span id="dur">0:00</span></div></div>
-    <div class="controls"><button id="prev" class="ctrl">‹</button><button id="play" class="ctrl play">▶</button><button id="next" class="ctrl">›</button></div>
-    <div class="searchBox"><input id="search" placeholder="歌名、歌手、歌单关键词"><button onclick="openNetEase(document.getElementById('search').value)">网易云找</button></div>
-    <div class="smallActions"><button class="pillBtn" onclick="showLocal()">本地试听</button><button class="pillBtn" onclick="openNetEase('私人FM')">打开网易云</button></div>
-    <div class="sectionTitle">快速场景</div><div class="chips"><button class="chip" onclick="goAI('学习 40 分钟，低干扰，有一点节奏，不要太困')">学习</button><button class="chip" onclick="goAI('骑车听，节奏感强一点，但不要俗套')">骑车</button><button class="chip" onclick="goAI('夜晚听，安静、克制，有一点孤独感')">夜晚</button><button class="chip" onclick="goAI('随机给我一个平时不太会主动点开的音乐方向')">随机发现</button></div>
-  </section>
-  <section id="ai" class="page">
-    <div class="chips"><button class="chip" onclick="ask('学习 40 分钟，低干扰，有一点节奏')">学习</button><button class="chip" onclick="ask('骑车听，节奏感强')">骑车</button><button class="chip" onclick="ask('夜晚，安静但别太丧')">夜晚</button><button class="chip" onclick="ask('想听点新东西')">随机</button></div>
-    <div id="chat" class="chat"><div class="msg ai">告诉我现在的场景、情绪，或者你最近喜欢的歌。我会把要求压成几个网易云可直接搜索的方向。<div class="hint">v0.1 使用本地推荐逻辑，不上传聊天内容。</div></div></div>
-    <div class="composer"><input id="prompt" placeholder="比如：做数学，想清醒一点，别有人声"><button class="send" onclick="send()">↑</button></div>
-  </section>
+<header><div class="avatar" id="avatar">E</div><div class="identity"><div class="name" id="headerName">Evan</div><div class="status" id="headerStatus">close friend · local memory</div></div><button class="iconBtn" id="settingsBtn" aria-label="Settings">⋯</button></header>
+<div class="connect" id="connectCard"><div class="connectText"><div class="connectTitle">Connect your ChatGPT plan</div><div class="connectSub">No API key. Chat stays saved on this phone.</div></div><button id="connectBtn">Continue</button></div>
+<main id="chat"><div class="day">private · on this device</div></main>
+<div class="composer"><textarea id="input" rows="1" placeholder="Message Evan…" enterkeyhint="send"></textarea><button class="send" id="sendBtn" aria-label="Send">↑</button></div>
 </div>
-<nav class="nav"><button id="navPlayer" class="active" onclick="switchPage('player')">听歌</button><button id="navAI" onclick="switchPage('ai')">AI 找歌</button></nav>
-<div id="localModal" class="modal" onclick="if(event.target===this)hideLocal()"><div class="sheet"><h3>本地试听</h3><p>可选功能。你不需要把音乐“导入”进 App，只需临时选一首本地音频试听；退出后不复制文件。</p><input id="file" type="file" accept="audio/*"><button class="close" onclick="hideLocal()">完成</button></div></div>
-<audio id="audio"></audio>
+<div class="overlay" id="overlay"><section class="sheet" role="dialog" aria-modal="true"><div class="handle"></div><h2>Companion settings</h2>
+<div class="field"><label for="nameInput">Name</label><input id="nameInput" maxlength="24" /></div>
+<div class="field"><label for="memoryInput">Things worth remembering</label><textarea id="memoryInput" placeholder="Interests, routines, ongoing stories…"></textarea><div class="note">These notes are stored locally and sent only as context when you message him. Keep this short; it saves plan usage.</div></div>
+<div class="field"><label>ChatGPT connection</label><div class="account" id="accountBox"><strong>Not connected</strong><span>Connect from the chat screen.</span></div></div>
+<div class="actions"><button class="primary" id="saveBtn">Save</button><button id="closeBtn">Close</button><button id="signOutBtn" class="hidden">Sign out on this device</button><button class="danger" id="clearBtn">Clear chat</button></div>
+<div class="tiny">Evan is an AI companion, not a real person. The default relationship is a close platonic friendship.</div></section></div>
 <script>
-const $=id=>document.getElementById(id); const audio=$('audio'); let currentName='';
-function switchPage(p){['player','ai'].forEach(x=>$(x).classList.toggle('active',x===p));$('navPlayer').classList.toggle('active',p==='player');$('navAI').classList.toggle('active',p==='ai')}
-function goAI(text){switchPage('ai');ask(text)}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function openNetEase(q){q=(q||'').trim();if(!q)return;location.href='https://music.163.com/#/search/m/?s='+encodeURIComponent(q)}
-function addMsg(kind,html){const d=document.createElement('div');d.className='msg '+kind;d.innerHTML=html;$('chat').appendChild(d);$('chat').scrollTop=$('chat').scrollHeight}
-const banks={
- study:[['极简钢琴 / minimal piano','适合需要保持思路连续时'],['氛围电子 / ambient electronic','有流动感，但不会抢注意力'],['后摇纯音乐 / instrumental post-rock','需要一点推进感时'],['巴赫 平均律 / Bach WTC','结构清楚，适合长时间工作']],
- ride:[['synthwave 骑行','稳定拍点，适合骑行节奏'],['indie rock driving','比流行歌更有推进感'],['drum and bass melodic','速度感明显，避免太软'],['city pop upbeat','轻快但不至于太炸']],
- night:[['dream pop 夜晚','柔和、有空间感'],['ambient 夜色','安静、克制'],['indie folk late night','有人声但整体收敛'],['city pop midnight','夜行感更强']],
- calm:[['neo-classical calm','清醒但不刺激'],['piano ambient','低存在感'],['bossa nova soft','轻松、不沉闷'],['jazz trio mellow','有细节但不过分抢耳']],
- random:[['shoegaze essentials','声音层次很厚，和常规流行差异大'],['巴西 bossa nova','节奏轻，适合换口味'],['现代古典 / neo-classical','旋律与质感都比较克制'],['日系器乐 math rock','节奏细密，适合想听新鲜东西时']]
-};
-function recommend(t){const s=t.toLowerCase();let key='random';if(/学习|数学|物理|作业|专注|study/.test(s))key='study';else if(/骑|跑|运动|ride/.test(s))key='ride';else if(/夜|睡前|孤独|night/.test(s))key='night';else if(/安静|舒缓|放松|calm/.test(s))key='calm';let arr=[...banks[key]];
- let extra=[]; if(/不要人声|纯音乐|无人声/.test(s))extra.push('纯音乐'); if(/日语|日本/.test(s))extra.push('日系'); if(/俄语|俄罗斯/.test(s))extra.push('俄语'); if(/英文|英语/.test(s))extra.push('英文'); if(/不困|清醒/.test(s))extra.push('清醒'); if(/别太吵|不要太吵|克制/.test(s))extra.push('低刺激');
- return arr.slice(0,3).map(([q,r])=>[([q,...extra].join(' ')).trim(),r]);}
-function ask(text){text=(text||'').trim();if(!text)return;addMsg('me',esc(text));const recs=recommend(text);let h='我先给你三个方向。它们不是“猜你爱听”的推荐流，而是按你刚刚的条件筛：<div class="recs">';recs.forEach(([q,r])=>h+=`<div class="rec"><div><b>${esc(q)}</b><span>${esc(r)}</span></div><button onclick="openNetEase('${q.replace(/'/g,"\\'")}')">去搜</button></div>`);h+='</div><div class="hint">你也可以继续说“第二个太吵”“想更冷一点”“只要女声”之类，我会继续收窄。</div>';setTimeout(()=>addMsg('ai',h),180)}
-function send(){const i=$('prompt');const t=i.value;i.value='';ask(t)}$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
-function showLocal(){$('localModal').classList.add('show')}function hideLocal(){$('localModal').classList.remove('show')}
-$('file').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;audio.src=URL.createObjectURL(f);currentName=f.name.replace(/\.[^.]+$/,'');$('trackTitle').textContent=currentName;$('trackArtist').textContent='本地试听';hideLocal();audio.play();$('play').textContent='Ⅱ';$('cover').classList.add('playing')});
-$('play').onclick=()=>{if(!audio.src){goAI('我现在就想听歌，给我三个快速方向');return}if(audio.paused){audio.play();$('play').textContent='Ⅱ';$('cover').classList.add('playing')}else{audio.pause();$('play').textContent='▶';$('cover').classList.remove('playing')}};
-$('prev').onclick=()=>{if(audio.src)audio.currentTime=Math.max(0,audio.currentTime-15)};$('next').onclick=()=>{if(audio.src)audio.currentTime=Math.min(audio.duration||0,audio.currentTime+15)};
-audio.addEventListener('timeupdate',()=>{if(!audio.duration)return;$('seek').value=(audio.currentTime/audio.duration)*100;$('now').textContent=fmt(audio.currentTime);$('dur').textContent=fmt(audio.duration)});$('seek').oninput=e=>{if(audio.duration)audio.currentTime=(+e.target.value/100)*audio.duration};audio.addEventListener('ended',()=>{$('play').textContent='▶';$('cover').classList.remove('playing')});
-function fmt(n){if(!isFinite(n))return'0:00';const m=Math.floor(n/60),s=Math.floor(n%60);return m+':'+String(s).padStart(2,'0')}
+(()=>{
+const $=id=>document.getElementById(id),chat=$('chat'),input=$('input'),sendBtn=$('sendBtn');
+let name=localStorage.getItem('companionName')||'Evan',memory=localStorage.getItem('companionMemory')||'',history=loadHistory(),connected=false,accountEmail='',model='',sending=false,streamingBubble=null,streamingText='';
+function loadHistory(){try{const v=JSON.parse(localStorage.getItem('chatHistory')||'[]');return Array.isArray(v)?v.slice(-400):[]}catch{return[]}}
+function saveHistory(){localStorage.setItem('chatHistory',JSON.stringify(history.slice(-400)))}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function updateIdentity(){$('headerName').textContent=name;$('avatar').textContent=(name[0]||'E').toUpperCase();input.placeholder='Message '+name+'…'}
+function render(){chat.innerHTML='<div class="day">private · on this device</div>';if(!history.length)addGreeting();history.forEach(m=>addBubble(m.role,m.text,false));scrollBottom(false)}
+function addGreeting(){const text='hey. call me '+name+' for now — you can change that whenever you want.';history.push({role:'assistant',text,ts:Date.now()});saveHistory()}
+function addBubble(role,text,scroll=true){const row=document.createElement('div');row.className='row '+(role==='user'?'me':'them');const b=document.createElement('div');b.className='bubble';b.textContent=text;row.appendChild(b);chat.appendChild(row);if(scroll)scrollBottom();return b}
+function showError(text){const d=document.createElement('div');d.className='error';d.textContent=text;chat.appendChild(d);scrollBottom()}
+function scrollBottom(smooth=true){requestAnimationFrame(()=>chat.scrollTo({top:chat.scrollHeight,behavior:smooth?'smooth':'auto'}))}
+function resize(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,120)+'px'}
+function send(){const text=input.value.trim();if(!text||sending)return;if(!connected){$('connectCard').classList.add('show');showError('Connect your ChatGPT plan first.');return}history.push({role:'user',text,ts:Date.now()});saveHistory();addBubble('user',text);input.value='';resize();sending=true;sendBtn.disabled=true;streamingText='';streamingBubble=addBubble('assistant','');streamingBubble.classList.add('typing');try{AndroidBridge.send(JSON.stringify(history.slice(-24)),memory,name)}catch(e){finishWithError('The Android bridge is unavailable.')}}
+window.onAssistantDelta=delta=>{streamingText+=delta;if(streamingBubble)streamingBubble.textContent=streamingText;scrollBottom()};
+window.onAssistantDone=full=>{const text=(full||streamingText||'').trim();if(streamingBubble)streamingBubble.classList.remove('typing');if(text){if(streamingBubble)streamingBubble.textContent=text;history.push({role:'assistant',text,ts:Date.now()});saveHistory()}else if(streamingBubble){streamingBubble.closest('.row').remove()}streamingBubble=null;streamingText='';sending=false;sendBtn.disabled=false;input.focus()};
+window.onAssistantError=msg=>finishWithError(msg||'Something went wrong.');
+function finishWithError(msg){if(streamingBubble)streamingBubble.closest('.row').remove();streamingBubble=null;streamingText='';sending=false;sendBtn.disabled=false;showError(msg)}
+window.onConnectionState=state=>{connected=!!state.connected;accountEmail=state.email||'';model=state.model||'';$('connectCard').classList.toggle('show',!connected);$('headerStatus').textContent=connected?(model?'connected · '+model:'connected · ChatGPT plan'):'close friend · local memory';$('signOutBtn').classList.toggle('hidden',!connected);$('accountBox').innerHTML=connected?'<strong>'+esc(accountEmail||'ChatGPT account')+'</strong><span>Connected'+(model?' · '+esc(model):'')+'</span>':'<strong>Not connected</strong><span>Connect from the chat screen.</span>'};
+window.onAuthSuccess=()=>AndroidBridge.refreshStatus();window.onAuthError=msg=>showError(msg||'Could not connect ChatGPT.');
+$('connectBtn').onclick=()=>{$('connectBtn').disabled=true;$('connectBtn').textContent='Opening…';try{AndroidBridge.startLogin()}catch(e){showError('Could not open ChatGPT login.')}setTimeout(()=>{$('connectBtn').disabled=false;$('connectBtn').textContent='Continue'},2500)};
+sendBtn.onclick=send;input.addEventListener('input',resize);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+$('settingsBtn').onclick=()=>{$('nameInput').value=name;$('memoryInput').value=memory;$('overlay').classList.add('show')};$('closeBtn').onclick=()=>$('overlay').classList.remove('show');$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))$('overlay').classList.remove('show')});
+$('saveBtn').onclick=()=>{const next=$('nameInput').value.trim().slice(0,24);if(next)name=next;memory=$('memoryInput').value.trim().slice(0,2400);localStorage.setItem('companionName',name);localStorage.setItem('companionMemory',memory);updateIdentity();$('overlay').classList.remove('show')};
+$('clearBtn').onclick=()=>{if(confirm('Clear the local chat history?')){history=[];saveHistory();render()}};
+$('signOutBtn').onclick=()=>{if(confirm('Sign out of ChatGPT on this device?')){AndroidBridge.signOut();$('overlay').classList.remove('show')}};
+updateIdentity();render();resize();try{AndroidBridge.refreshStatus()}catch(e){$('connectCard').classList.add('show')}
+})();
 </script>
 </body>
 </html>
