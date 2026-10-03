@@ -29,9 +29,19 @@ jobs:
         with:
           gradle-version: '9.4.1'
 
+      - name: Restore debug signing identity
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: puremusic-debug-signing-v1
+
+      - name: Test recommendation conversations
+        working-directory: PureMusic
+        run: bash tests/run.sh
+
       - name: Build debug APK
         working-directory: PureMusic
-        run: gradle :app:assembleDebug --stacktrace
+        run: gradle :app:assembleDebug :app:lintDebug --stacktrace
 
       - name: Prepare APK
         run: cp PureMusic/app/build/outputs/apk/debug/app-debug.apk PureMusic.apk
@@ -47,8 +57,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view puremusic-v0.2.1 >/dev/null 2>&1; then
-            gh release upload puremusic-v0.2.1 PureMusic.apk --clobber
-          else
-            gh release create puremusic-v0.2.1 PureMusic.apk --title "PureMusic v0.2.1" --notes "PureMusic Android v0.1.0"
+          if gh release view puremusic-v0.3.0 >/dev/null 2>&1; then
+            echo "Release already exists; refusing to replace published APK."
+            exit 1
           fi
+          gh release create puremusic-v0.3.0 PureMusic.apk --target "$GITHUB_SHA" --title "PureMusic v0.3.0" --notes-file PureMusic/RELEASE_NOTES.md

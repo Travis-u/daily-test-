@@ -57,9 +57,8 @@ public class MainActivity extends Activity {
     private SeekBar seekBar;
     private Button playButton;
     private Button permissionButton;
-    private LinearLayout aiPanel;
-    private LinearLayout aiResults;
-    private EditText aiInput;
+    private MusicChatView chat;
+    private ScrollView playerPage;
 
     private long durationMs = 0L;
     private boolean userSeeking = false;
@@ -233,53 +232,32 @@ public class MainActivity extends Activity {
         actions.addView(aiButton, half2);
         root.addView(actions);
 
-        aiPanel = new LinearLayout(this);
-        aiPanel.setOrientation(LinearLayout.VERTICAL);
-        aiPanel.setVisibility(View.GONE);
-        aiPanel.setPadding(dp(16), dp(16), dp(16), dp(16));
-        aiPanel.setBackground(rounded(Color.WHITE, 22));
-
-        TextView aiTitle = text("AI 找歌", 19, Color.rgb(20,20,20), Typeface.BOLD);
-        aiPanel.addView(aiTitle);
-
-        TextView aiNote = text("先用本地语义规则做场景筛选；真正的大模型接口下一版再接，避免把 API 密钥塞进 APK。", 12,
-                Color.rgb(125,125,118), Typeface.NORMAL);
-        aiNote.setPadding(0, dp(6), 0, dp(12));
-        aiPanel.addView(aiNote);
-
-        aiInput = new EditText(this);
-        aiInput.setHint("例如：写物理，清醒一点，不要人声，也别太吵");
-        aiInput.setTextSize(14);
-        aiInput.setSingleLine(false);
-        aiInput.setMinLines(2);
-        aiInput.setPadding(dp(14), dp(10), dp(14), dp(10));
-        aiInput.setBackground(rounded(Color.rgb(246,246,241), 16));
-        aiPanel.addView(aiInput, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(74)));
-
-        Button ask = button("生成推荐");
-        LinearLayout.LayoutParams askLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(46));
-        askLp.setMargins(0, dp(10), 0, dp(6));
-        aiPanel.addView(ask, askLp);
-        ask.setOnClickListener(v -> runLocalRecommendation(aiInput.getText().toString()));
-
-        aiResults = new LinearLayout(this);
-        aiResults.setOrientation(LinearLayout.VERTICAL);
-        aiPanel.addView(aiResults);
-
-        LinearLayout.LayoutParams aiLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        aiLp.setMargins(0, dp(18), 0, 0);
-        root.addView(aiPanel, aiLp);
-
         TextView privacy = text("纯音不读取网易云账号密码，也不解密会员音源；它只控制 Android 已公开的媒体会话。", 11,
                 Color.rgb(155,155,148), Typeface.NORMAL);
         privacy.setGravity(Gravity.CENTER);
         privacy.setPadding(dp(12), dp(18), dp(12), dp(4));
         root.addView(privacy);
 
-        setContentView(scroll);
+        playerPage = scroll;
+        android.widget.FrameLayout pages = new android.widget.FrameLayout(this);
+        pages.addView(scroll);
+        chat = new MusicChatView(this, new MusicChatView.Actions() {
+            public void close() { showChat(false); }
+            public void togglePlayback() { MainActivity.this.togglePlayback(); }
+            public void open(SongCatalog.Song song) { searchNetEase(song.query()); }
+            public boolean playHere(SongCatalog.Song song) { return playRecommendation(song); }
+        });
+        pages.addView(chat, new android.widget.FrameLayout.LayoutParams(-1,-1));
+        chat.setVisibility(View.GONE);
+        if (Build.VERSION.SDK_INT >= 30) {
+            pages.setOnApplyWindowInsetsListener((view, insets) -> {
+                android.graphics.Insets bars = insets.getInsets(android.view.WindowInsets.Type.systemBars());
+                android.graphics.Insets ime = insets.getInsets(android.view.WindowInsets.Type.ime());
+                view.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
+                return android.view.WindowInsets.CONSUMED;
+            });
+        }
+        setContentView(pages);
     }
 
     private void setupMediaCallbacks() {
@@ -363,15 +341,7 @@ public class MainActivity extends Activity {
                     break;
                 }
             }
-            if (chosen == null) {
-                for (MediaController c : controllers) {
-                    PlaybackState state = c.getPlaybackState();
-                    if (state != null && state.getState() == PlaybackState.STATE_PLAYING) {
-                        chosen = c;
-                        break;
-                    }
-                }
-            }
+
         }
 
         if (chosen == null) {
@@ -470,7 +440,7 @@ public class MainActivity extends Activity {
 
     private void togglePlayback() {
         if (controller == null) {
-            openNetEase();
+            Toast.makeText(this, "请先在网易云播放一首歌以建立媒体会话", Toast.LENGTH_SHORT).show();
             return;
         }
         PlaybackState state = controller.getPlaybackState();
@@ -489,6 +459,11 @@ public class MainActivity extends Activity {
                 updateProgressFromState(controller.getPlaybackState());
             } else if (hasNotificationAccess()) {
                 refreshSessions();
+            }
+            if (chat != null) {
+                PlaybackState state = controller == null ? null : controller.getPlaybackState();
+                chat.updatePlayer(titleText.getText().toString(), artistText.getText().toString(),
+                    state != null && state.getState() == PlaybackState.STATE_PLAYING);
             }
             handler.postDelayed(this, 600);
         }
@@ -511,21 +486,12 @@ public class MainActivity extends Activity {
     private void searchNetEase(String query) {
         if (TextUtils.isEmpty(query)) return;
 
-        // First try Android's explicit in-app search intent. Because the package is fixed
-        // to NetEase Cloud Music, the system will never route this to a browser.
-        try {
-            Intent search = new Intent(Intent.ACTION_SEARCH);
-            search.setPackage(NETEASE_PACKAGE);
-            search.putExtra(SearchManager.QUERY, query);
-            search.putExtra("query", query);
-            search.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(search);
+        // No verified content IDs/deep links in the seed catalogue. Copy an exact query
+        // and launch only the explicit package. Never send ACTION_VIEW or an HTTP URI.
+        if (getPackageManager().getLaunchIntentForPackage(NETEASE_PACKAGE) == null) {
+            Toast.makeText(this, "没有检测到网易云音乐", Toast.LENGTH_SHORT).show();
             return;
-        } catch (Exception ignored) {
-            // Some NetEase versions do not expose ACTION_SEARCH. In that case we still
-            // keep the flow browser-free: copy the exact query and open NetEase itself.
         }
-
         try {
             ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
             if (cm != null) {
@@ -537,80 +503,41 @@ public class MainActivity extends Activity {
         Toast.makeText(this, "搜索词已复制，可直接粘贴到网易云搜索框", Toast.LENGTH_LONG).show();
     }
 
-    private void toggleAiPanel() {
-        aiPanel.setVisibility(aiPanel.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-    }
+    private void toggleAiPanel() { showChat(chat.getVisibility() != View.VISIBLE); }
 
-    private void runLocalRecommendation(String prompt) {
-        aiResults.removeAllViews();
-        String p = prompt == null ? "" : prompt.trim().toLowerCase(Locale.ROOT);
-        if (p.isEmpty()) {
-            aiInput.setError("先说一句你现在想听什么");
-            return;
-        }
-
-        List<Rec> recs = new ArrayList<>();
-        if (containsAny(p, "学习","数学","物理","化学","生物","作业","专注","study")) {
-            recs.add(new Rec("minimal piano study", "存在感低，适合连续推题"));
-            recs.add(new Rec("ambient electronic focus", "有流动感，但通常不抢注意力"));
-            recs.add(new Rec("Bach well tempered clavier study", "结构清楚，适合长时间工作"));
-        } else if (containsAny(p, "骑车","运动","跑步","ride")) {
-            recs.add(new Rec("synthwave cycling", "拍点稳定，适合骑行节奏"));
-            recs.add(new Rec("indie rock driving", "推进感明显，不容易听困"));
-            recs.add(new Rec("melodic drum and bass", "速度感强，适合需要兴奋度时"));
-        } else if (containsAny(p, "夜","晚上","孤独","睡前","night")) {
-            recs.add(new Rec("dream pop late night", "柔和、有空间感"));
-            recs.add(new Rec("ambient midnight", "安静、克制"));
-            recs.add(new Rec("indie folk late night", "有人声但整体收敛"));
-        } else {
-            recs.add(new Rec("neo classical essentials", "旋律和质感都比较克制"));
-            recs.add(new Rec("bossa nova gentle", "轻松，但不至于完全没节奏"));
-            recs.add(new Rec("instrumental math rock", "想换口味时会比较新鲜"));
-        }
-
-        String suffix = "";
-        if (containsAny(p, "不要人声","纯音乐","无人声","instrumental")) suffix += " 纯音乐";
-        if (containsAny(p, "日语","日本","日系")) suffix += " 日系";
-        if (containsAny(p, "俄语","俄罗斯")) suffix += " 俄语";
-        if (containsAny(p, "英文","英语")) suffix += " 英文";
-        if (containsAny(p, "清醒","不困")) suffix += " 清醒";
-        if (containsAny(p, "别太吵","不要太吵","克制","低刺激")) suffix += " 低刺激";
-
-        for (Rec rec : recs) {
-            addRecommendationCard(rec.query + suffix, rec.reason);
+    private void showChat(boolean visible) {
+        chat.setVisibility(visible ? View.VISIBLE : View.GONE);
+        playerPage.setVisibility(visible ? View.GONE : View.VISIBLE);
+        if (!visible) {
+            android.view.inputmethod.InputMethodManager keyboard =
+                (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (keyboard != null) keyboard.hideSoftInputFromWindow(chat.getWindowToken(), 0);
         }
     }
 
-    private boolean containsAny(String text, String... words) {
-        for (String w : words) if (text.contains(w)) return true;
-        return false;
+    @Override public void onBackPressed() {
+        if (chat != null && chat.getVisibility() == View.VISIBLE) showChat(false);
+        else super.onBackPressed();
     }
 
-    private void addRecommendationCard(String query, String reason) {
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.HORIZONTAL);
-        card.setGravity(Gravity.CENTER_VERTICAL);
-        card.setPadding(dp(12), dp(10), dp(10), dp(10));
-        card.setBackground(rounded(Color.rgb(246,246,241), 15));
-
-        LinearLayout texts = new LinearLayout(this);
-        texts.setOrientation(LinearLayout.VERTICAL);
-        TextView q = text(query, 14, Color.rgb(30,30,30), Typeface.BOLD);
-        TextView r = text(reason, 12, Color.rgb(125,125,118), Typeface.NORMAL);
-        r.setPadding(0, dp(3), 0, 0);
-        texts.addView(q);
-        texts.addView(r);
-        card.addView(texts, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-
-        Button search = button("网易云搜");
-        search.setTextSize(12);
-        search.setOnClickListener(v -> searchNetEase(query));
-        card.addView(search, new LinearLayout.LayoutParams(dp(94), dp(40)));
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, dp(7), 0, 0);
-        aiResults.addView(card, lp);
+    private boolean playRecommendation(SongCatalog.Song song) {
+        if (controller == null || !NETEASE_PACKAGE.equals(controller.getPackageName())) return false;
+        PlaybackState state = controller.getPlaybackState();
+        if (state == null || (state.getActions() & PlaybackState.ACTION_PLAY_FROM_SEARCH) == 0) return false;
+        try {
+            Bundle extras = new Bundle();
+            extras.putString(android.provider.MediaStore.EXTRA_MEDIA_TITLE, song.title);
+            extras.putString(android.provider.MediaStore.EXTRA_MEDIA_ARTIST, song.artist);
+            controller.getTransportControls().playFromSearch(song.query(), extras);
+            Toast.makeText(this, "已请求网易云播放，正在等待歌曲信息确认", Toast.LENGTH_SHORT).show();
+            handler.postDelayed(() -> {
+                String title = titleText.getText().toString();
+                if (!title.toLowerCase(Locale.ROOT).contains(song.title.toLowerCase(Locale.ROOT))) {
+                    Toast.makeText(this, "未确认切到这首歌，可用卡片的“网易云打开”精确搜索", Toast.LENGTH_LONG).show();
+                }
+            }, 5000);
+            return true;
+        } catch (Exception e) { return false; }
     }
 
     private TextView text(String value, int sp, int color, int style) {
@@ -676,12 +603,4 @@ public class MainActivity extends Activity {
         return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
     }
 
-    private static class Rec {
-        final String query;
-        final String reason;
-        Rec(String query, String reason) {
-            this.query = query;
-            this.reason = reason;
-        }
-    }
 }
