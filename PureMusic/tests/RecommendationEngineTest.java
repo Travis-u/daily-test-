@@ -11,7 +11,7 @@ public class RecommendationEngineTest {
         String rejected=first.items.get(1).song.id;
         RecommendationEngine.Reply second=e.respond("第二个太吵");
         check(!second.items.isEmpty(),"numbered refinement");
-        for(RecommendationEngine.Item i:second.items) check(!i.song.id.equals(rejected) && i.song.energy<first.items.get(1).song.energy && !i.song.vocals,"reject and reduce energy with context");
+        for(RecommendationEngine.Item i:second.items) check(!i.song.id.equals(rejected) && i.song.energy<=Math.max(0,first.items.get(1).song.energy-1) && !i.song.vocals,"reject and reduce energy with context");
         e.reset(); first=e.respond("推荐");
         e.select(first.items.get(0).song.id);
         second=e.respond("这个歌手可以，再冷一点");

@@ -50,7 +50,9 @@ public final class RecommendationEngine implements RecommendationProvider {
         if(!artist.isEmpty()) parts.add(artist);
         if(!style.isEmpty()) parts.add(style);
         if(!language.isEmpty()) parts.add(language);
-        return parts.isEmpty()?"还没有限定偏好":String.join(" · ",parts);
+        StringBuilder result=new StringBuilder();
+        for(String part:parts) { if(result.length()>0) result.append(" · "); result.append(part); }
+        return parts.isEmpty()?"还没有限定偏好":result.toString();
     }
     @Override public Reply respond(String message) {
         String p=message==null?"":message.trim().toLowerCase(Locale.ROOT);
