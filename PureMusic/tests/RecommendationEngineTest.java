@@ -13,10 +13,10 @@ public class RecommendationEngineTest {
         check(!second.items.isEmpty(),"numbered refinement");
         for(RecommendationEngine.Item i:second.items) check(!i.song.id.equals(rejected) && i.song.energy<=Math.max(0,first.items.get(1).song.energy-1) && !i.song.vocals,"reject and reduce energy with context");
         e.reset(); first=e.respond("推荐");
-        e.select(first.items.get(0).song.id);
+        e.select(first.items.get(1).song.id);
         second=e.respond("这个歌手可以，再冷一点");
         check(!second.items.isEmpty(),"artist refinement has candidates");
-        for(RecommendationEngine.Item i:second.items) check(i.song.artist.equals(first.items.get(0).song.artist) && i.song.cold>first.items.get(0).song.cold,"retain artist and colder");
+        for(RecommendationEngine.Item i:second.items) check(i.song.artist.equals(first.items.get(1).song.artist) && i.song.cold>first.items.get(1).song.cold,"retain artist and colder");
         e.reset(); check(e.respond("这个歌手可以").items.isEmpty(),"ambiguous reference asks");
         check(e.respond("第三个太吵").items.isEmpty(),"invalid index asks");
         check(e.respond("我想听火星上猫写的爵士").items.isEmpty(),"unsupported asks, no invented songs");

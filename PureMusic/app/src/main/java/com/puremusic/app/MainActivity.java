@@ -75,8 +75,14 @@ public class MainActivity extends Activity {
 
         sessionManager = (MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
         buildUi();
+        if (savedInstanceState != null && savedInstanceState.getBoolean("chat_visible")) showChat(true);
         setupMediaCallbacks();
         refreshAccessState();
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state) {
+        state.putBoolean("chat_visible", chat != null && chat.getVisibility() == View.VISIBLE);
+        super.onSaveInstanceState(state);
     }
 
     @Override
