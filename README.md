@@ -1,3 +1,3 @@
-# Temporary Android build workspace
+# Temporary workspace
 
-Used to build MakiPlayer APK.
+No application source is stored in the current tree.
