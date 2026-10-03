@@ -6,7 +6,7 @@
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:roundIcon="@drawable/ic_launcher"
-        android:label="Maki 讲座"
+        android:label="讲座书架"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false">
         <activity
