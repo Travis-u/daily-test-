@@ -1,8 +1,6 @@
 package com.makiplayer.app;
 
 import android.app.Activity;
-import android.content.SharedPreferences;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -27,9 +25,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 public class MainActivity extends Activity {
@@ -76,7 +77,7 @@ public class MainActivity extends Activity {
         String cached = getSharedPreferences(PREFS, MODE_PRIVATE)
                 .getString(CACHE_KEY, null);
         if (cached != null && loadCached(cached)) {
-            renderLectures();
+            renderLectures("● 已载入缓存 · 正在自动同步…");
             fetchLectures(false);
         } else {
             fetchLectures(true);
@@ -138,9 +139,7 @@ public class MainActivity extends Activity {
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT));
                 customView = null;
-                if (customViewCallback != null) {
-                    customViewCallback.onCustomViewHidden();
-                }
+                if (customViewCallback != null) customViewCallback.onCustomViewHidden();
                 customViewCallback = null;
             }
         };
@@ -149,8 +148,10 @@ public class MainActivity extends Activity {
 
     private void fetchLectures(boolean showLoading) {
         if (showLoading) {
-            statusText.setText("正在读取完整讲座目录…");
+            statusText.setText("● 正在自动同步完整目录…");
         }
+
+        final int oldCount = lectures.size();
 
         new Thread(() -> {
             HttpURLConnection conn = null;
@@ -171,9 +172,7 @@ public class MainActivity extends Activity {
                         ? conn.getInputStream() : conn.getErrorStream();
                 String body = readAll(in);
 
-                if (code < 200 || code >= 300) {
-                    throw new Exception("HTTP " + code);
-                }
+                if (code < 200 || code >= 300) throw new Exception("HTTP " + code);
 
                 JSONObject root = new JSONObject(body);
                 if (root.optInt("code", -1) != 0) {
@@ -190,17 +189,28 @@ public class MainActivity extends Activity {
 
                 runOnUiThread(() -> {
                     loadCached(normalized.toString());
-                    renderLectures();
+                    int delta = lectures.size() - oldCount;
+                    String time = new SimpleDateFormat("MM-dd HH:mm", Locale.CHINA)
+                            .format(new Date());
+                    String status;
+                    if (oldCount > 0 && delta > 0) {
+                        status = "● 自动更新 +" + delta + " · 共 " + lectures.size()
+                                + " 个 · " + time;
+                    } else {
+                        status = "● 已自动同步 · 共 " + lectures.size()
+                                + " 个 · " + time;
+                    }
+                    renderLectures(status);
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     if (lectures.isEmpty()) {
-                        statusText.setText("目录读取失败。检查网络后点“刷新目录”重试。");
+                        statusText.setText("● 同步失败 · 点“立即同步”重试");
                         Toast.makeText(this,
                                 "读取 B 站合集失败：" + e.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     } else {
-                        statusText.setText("已显示缓存目录；本次刷新失败。");
+                        statusText.setText("● 离线使用缓存 · 下次启动会自动再同步");
                     }
                 });
             } finally {
@@ -212,9 +222,7 @@ public class MainActivity extends Activity {
     private JSONArray extractSeasonEpisodes(JSONObject root) throws Exception {
         JSONObject data = root.getJSONObject("data");
         JSONObject season = data.optJSONObject("ugc_season");
-        if (season == null) {
-            throw new Exception("这个视频没有返回合集信息");
-        }
+        if (season == null) throw new Exception("这个视频没有返回合集信息");
 
         JSONArray out = new JSONArray();
         JSONArray sections = season.optJSONArray("sections");
@@ -240,9 +248,7 @@ public class MainActivity extends Activity {
                         if (title.isEmpty()) title = arc.optString("title", "");
                     }
 
-                    if (bvid.isEmpty() || title.isEmpty() || seen.contains(bvid)) {
-                        continue;
-                    }
+                    if (bvid.isEmpty() || title.isEmpty() || seen.contains(bvid)) continue;
 
                     seen.add(bvid);
                     JSONObject one = new JSONObject();
@@ -260,9 +266,7 @@ public class MainActivity extends Activity {
         BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
         StringBuilder sb = new StringBuilder();
         String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
-        }
+        while ((line = reader.readLine()) != null) sb.append(line);
         reader.close();
         return sb.toString();
     }
@@ -289,15 +293,18 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void renderLectures() {
+    private void renderLectures(String status) {
         videoList.removeAllViews();
 
-        for (Lecture lecture : lectures) {
+        for (int i = 0; i < lectures.size(); i++) {
+            Lecture lecture = lectures.get(i);
+
             TextView item = new TextView(this);
-            item.setText(lecture.title);
-            item.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+            item.setText(String.format(Locale.CHINA, "%02d   %s", i + 1, lecture.title));
+            item.setTextColor(0xFFEAF2F8);
+            item.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
             item.setGravity(Gravity.CENTER_VERTICAL);
-            item.setPadding(dp(14), dp(15), dp(14), dp(15));
+            item.setPadding(dp(14), dp(16), dp(14), dp(16));
             item.setClickable(true);
             item.setFocusable(true);
 
@@ -312,12 +319,12 @@ public class MainActivity extends Activity {
                     ViewGroup.LayoutParams.WRAP_CONTENT));
 
             View divider = new View(this);
-            divider.setBackgroundColor(0xFFE7E7E7);
+            divider.setBackgroundColor(0xFF172331);
             videoList.addView(divider, new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
         }
 
-        statusText.setText("数学与认知方法讲座 · 共 " + lectures.size() + " 个视频");
+        statusText.setText(status);
     }
 
     private void playLecture(Lecture lecture) {
@@ -331,9 +338,7 @@ public class MainActivity extends Activity {
     }
 
     private void showList() {
-        if (customView != null) {
-            chromeClient.onHideCustomView();
-        }
+        if (customView != null) chromeClient.onHideCustomView();
         webView.stopLoading();
         webView.loadUrl("about:blank");
         playerPanel.setVisibility(View.GONE);
