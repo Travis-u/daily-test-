@@ -6,6 +6,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -93,25 +94,42 @@ public class MainActivity extends Activity {
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
-        s.setMediaPlaybackRequiresUserGesture(true);
+        s.setMediaPlaybackRequiresUserGesture(false);
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
         s.setDisplayZoomControls(false);
+        s.setLoadsImagesAutomatically(true);
+        s.setUseWideViewPort(true);
+        s.setLoadWithOverviewMode(true);
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        s.setUserAgentString(
+                "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 " +
+                "(KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36");
+
+        CookieManager cm = CookieManager.getInstance();
+        cm.setAcceptCookie(true);
+        cm.setAcceptThirdPartyCookies(webView, true);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                if (!request.isForMainFrame()) return false;
                 String host = request.getUrl().getHost();
-                return host == null || !host.equals("player.bilibili.com");
+                if (host == null) return true;
+                return !(host.equals("player.bilibili.com")
+                        || host.equals("www.bilibili.com")
+                        || host.equals("m.bilibili.com"));
             }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 try {
                     String host = new URL(url).getHost();
-                    return !host.equals("player.bilibili.com");
+                    return !(host.equals("player.bilibili.com")
+                            || host.equals("www.bilibili.com")
+                            || host.equals("m.bilibili.com"));
                 } catch (Exception e) {
-                    return true;
+                    return false;
                 }
             }
         });
@@ -147,9 +165,7 @@ public class MainActivity extends Activity {
     }
 
     private void fetchLectures(boolean showLoading) {
-        if (showLoading) {
-            statusText.setText("● 正在自动同步完整目录…");
-        }
+        if (showLoading) statusText.setText("● 正在自动同步完整目录…");
 
         final int oldCount = lectures.size();
 
@@ -180,9 +196,7 @@ public class MainActivity extends Activity {
                 }
 
                 JSONArray normalized = extractSeasonEpisodes(root);
-                if (normalized.length() == 0) {
-                    throw new Exception("没有读取到合集条目");
-                }
+                if (normalized.length() == 0) throw new Exception("没有读取到合集条目");
 
                 getSharedPreferences(PREFS, MODE_PRIVATE)
                         .edit().putString(CACHE_KEY, normalized.toString()).apply();
@@ -332,9 +346,27 @@ public class MainActivity extends Activity {
         listPanel.setVisibility(View.GONE);
         playerPanel.setVisibility(View.VISIBLE);
 
-        String url = "https://player.bilibili.com/player.html?bvid="
-                + lecture.bvid + "&danmaku=0&autoplay=0&high_quality=1";
-        webView.loadUrl(url);
+        String playerUrl = "https://player.bilibili.com/player.html?bvid="
+                + lecture.bvid + "&page=1&danmaku=0&autoplay=0&high_quality=1";
+
+        String html =
+                "<!doctype html><html><head>" +
+                "<meta name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no'>" +
+                "<style>html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;}" +
+                "iframe{border:0;width:100%;height:100%;display:block;background:#000;}</style>" +
+                "</head><body>" +
+                "<iframe src='" + playerUrl + "' " +
+                "allow='autoplay; fullscreen; picture-in-picture' " +
+                "allowfullscreen='true'></iframe>" +
+                "</body></html>";
+
+        webView.loadDataWithBaseURL(
+                "https://www.bilibili.com/",
+                html,
+                "text/html",
+                "UTF-8",
+                null
+        );
     }
 
     private void showList() {
