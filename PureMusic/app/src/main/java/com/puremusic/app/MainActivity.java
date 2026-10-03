@@ -153,6 +153,7 @@ public class MainActivity extends Activity {
     }
 
     private void beginOAuth() throws Exception {
+        startOAuthKeepAlive();
         ServerSocket server = new ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"));
         server.setSoTimeout(300000);
         int port = server.getLocalPort();
@@ -231,8 +232,28 @@ public class MainActivity extends Activity {
             emitConnectionState();
             emit("onAuthSuccess", "Connected to ChatGPT");
         } finally {
-            server.close();
+            try { server.close(); } catch (Exception ignored) {}
+            stopOAuthKeepAlive();
         }
+    }
+
+    private void startOAuthKeepAlive() {
+        runOnUiThread(() -> {
+            try {
+                Intent intent = new Intent(MainActivity.this, OAuthKeepAliveService.class);
+                if (android.os.Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
+                else startService(intent);
+            } catch (Exception e) {
+                emit("onAuthError", "Couldn't keep the login callback active: " + safeMessage(e));
+            }
+        });
+    }
+
+    private void stopOAuthKeepAlive() {
+        runOnUiThread(() -> {
+            try { stopService(new Intent(MainActivity.this, OAuthKeepAliveService.class)); }
+            catch (Exception ignored) {}
+        });
     }
 
     private JSONObject exchangeCode(String code, String verifier, String redirectUri, String issuedClientId) throws Exception {
