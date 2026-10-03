@@ -14,3 +14,7 @@ android {
         versionName = "0.3.0"
     }
 }
+
+dependencies {
+    implementation("androidx.activity:activity:1.11.0")
+}

@@ -1,6 +1,7 @@
 package com.puremusic.app;
 
-import android.app.Activity;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
 import android.app.NotificationManager;
 import android.app.SearchManager;
 import android.content.ComponentName;
@@ -38,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends Activity {
+public class MainActivity extends ComponentActivity {
     private static final String NETEASE_PACKAGE = "com.netease.cloudmusic";
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -59,6 +60,7 @@ public class MainActivity extends Activity {
     private Button permissionButton;
     private MusicChatView chat;
     private ScrollView playerPage;
+    private OnBackPressedCallback chatBackCallback;
 
     private long durationMs = 0L;
     private boolean userSeeking = false;
@@ -75,6 +77,10 @@ public class MainActivity extends Activity {
 
         sessionManager = (MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
         buildUi();
+        chatBackCallback = new OnBackPressedCallback(false) {
+            @Override public void handleOnBackPressed() { showChat(false); }
+        };
+        getOnBackPressedDispatcher().addCallback(this, chatBackCallback);
         if (savedInstanceState != null && savedInstanceState.getBoolean("chat_visible")) showChat(true);
         setupMediaCallbacks();
         refreshAccessState();
@@ -513,17 +519,13 @@ public class MainActivity extends Activity {
 
     private void showChat(boolean visible) {
         chat.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (chatBackCallback != null) chatBackCallback.setEnabled(visible);
         playerPage.setVisibility(visible ? View.GONE : View.VISIBLE);
         if (!visible) {
             android.view.inputmethod.InputMethodManager keyboard =
                 (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
             if (keyboard != null) keyboard.hideSoftInputFromWindow(chat.getWindowToken(), 0);
         }
-    }
-
-    @Override public void onBackPressed() {
-        if (chat != null && chat.getVisibility() == View.VISIBLE) showChat(false);
-        else super.onBackPressed();
     }
 
     private boolean playRecommendation(SongCatalog.Song song) {
