@@ -47,8 +47,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view puremusic-v0.1.0 >/dev/null 2>&1; then
-            gh release upload puremusic-v0.1.0 PureMusic.apk --clobber
+          if gh release view puremusic-v0.2.0 >/dev/null 2>&1; then
+            gh release upload puremusic-v0.2.0 PureMusic.apk --clobber
           else
-            gh release create puremusic-v0.1.0 PureMusic.apk --title "PureMusic v0.1.0" --notes "PureMusic Android v0.1.0"
+            gh release create puremusic-v0.2.0 PureMusic.apk --title "PureMusic v0.2.0" --notes "PureMusic Android v0.1.0"
           fi
