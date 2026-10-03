@@ -32,9 +32,7 @@ public final class MusicChatView extends LinearLayout {
         LinearLayout header=row();
         Button back=button("返回"); back.setOnClickListener(v->actions.close()); header.addView(back);
         TextView title=label("找歌对话",20,true); header.addView(title,new LayoutParams(0,dp(48),1));
-        Button clear=button("清空"); clear.setOnClickListener(v->new android.app.AlertDialog.Builder(context)
-            .setMessage("清空本机对话和找歌偏好？").setNegativeButton("取消",null)
-            .setPositiveButton("清空",(dialog,which)->{ events=new JSONArray(); provider.reset(); messages.removeAllViews(); welcome(); preferences.setText("还没有限定偏好"); save(); }).show());
+        Button clear=button("清空"); clear.setOnClickListener(v->confirmClear());
         header.addView(clear); addView(header);
         TextView mode=label("离线对话原型 · 尚未接入大模型",12,false); addView(mode);
         preferences=label("还没有限定偏好",12,false); preferences.setPadding(0,dp(6),0,dp(8)); addView(preferences);
@@ -66,6 +64,13 @@ public final class MusicChatView extends LinearLayout {
             }
         } catch(JSONException e) { events=new JSONArray(); provider.reset(); messages.removeAllViews(); welcome(); save(); }
         bottom();
+    }
+    private void confirmClear() {
+        new android.app.AlertDialog.Builder(getContext()).setMessage("清空本机对话和找歌偏好？")
+            .setNegativeButton("取消",null).setPositiveButton("清空",(dialog,which)->{
+                events=new JSONArray(); provider.reset(); messages.removeAllViews(); welcome();
+                preferences.setText("还没有限定偏好"); save();
+            }).show();
     }
     private void welcome() {
         bubble("告诉我场景、声音或情绪，我会给出具体歌曲和理由。比如：写物理，安静一点，不要人声。\n可以继续说“第二个太吵”。想保留某位歌手，先选“以此为参照”，再说“这个歌手可以，再冷一点”。\n目前曲库有限，不认识的要求会向你说明；网易云可用性和版本以 App 内为准。",false);
