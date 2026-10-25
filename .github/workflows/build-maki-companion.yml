@@ -16,11 +16,7 @@ jobs:
         with:
           gradle-version: '8.13'
       - name: Unpack Maki project
-        run: unzip -q -o MakiAudioAlarm-standalone-v0.2-source.zip
-      - name: Match Media3 1.11.1 build requirements
-        run: |
-          sed -i 's/8.7.3/8.11.1/g' MakiAudioAlarm-standalone/build.gradle
-          sed -i 's/compileSdk 35/compileSdk 36/g' MakiAudioAlarm-standalone/app/build.gradle MakiAudioAlarm-standalone/maki-audioalarm/build.gradle
+        run: unzip -q -o MakiAudioAlarm-standalone-v0.4-source.zip
       - name: Run Java alarm model tests
         run: bash MakiAudioAlarm-standalone/maki-audioalarm/tests/run_model_tests.sh
       - name: Build Android APK
